@@ -28,7 +28,7 @@
 
 import { formattingSettings } from "powerbi-visuals-utils-formattingmodel";
 
-import FormattingSettingsCard = formattingSettings.SimpleCard;
+import FormattingSettingsCard = formattingSettings.Card;
 import FormattingSettingsSlice = formattingSettings.Slice;
 import FormattingSettingsModel = formattingSettings.Model;
 
@@ -74,29 +74,35 @@ class DataPointCardSettings extends FormattingSettingsCard {
 /**
  * Card Settings Card
  */
-class CardSettingsCard extends FormattingSettingsCard {
+export class CardSettingsCard extends FormattingSettingsCard {
     cardWidth = new formattingSettings.NumUpDown({
         name: "cardWidth",
         displayName: "Card Width",
         value: 300
     });
 
-    cardHeight = new formattingSettings.NumUpDown({
+    cardHeight: FormattingSettingsSlice = new formattingSettings.NumUpDown({
         name: "cardHeight",
-        displayName: "Card Height",
-        value: 400
+        displayName: "Altura de Tarjeta",
+        value: 300
     });
 
-    showMetadata = new formattingSettings.ToggleSwitch({
+    showMetadata: FormattingSettingsSlice = new formattingSettings.ToggleSwitch({
         name: "showMetadata",
-        displayName: "Show Metadata",
+        displayName: "Mostrar Metadatos",
         value: true
     });
 
-    showProgress = new formattingSettings.ToggleSwitch({
+    showProgress: FormattingSettingsSlice = new formattingSettings.ToggleSwitch({
         name: "showProgress",
-        displayName: "Show Progress",
+        displayName: "Mostrar Barra de Progreso",
         value: true
+    });
+
+    progressColor: FormattingSettingsSlice = new formattingSettings.ColorPicker({
+        name: "progressColor",
+        displayName: "Color de la Barra de Progreso",
+        value: { value: "#0078d4" }
     });
 
     sortDirection = new formattingSettings.ItemDropdown({
@@ -109,76 +115,86 @@ class CardSettingsCard extends FormattingSettingsCard {
         ]
     });
 
-    viewMode = new formattingSettings.ItemDropdown({
+    viewMode: FormattingSettingsSlice = new formattingSettings.ItemDropdown({
         name: "viewMode",
-        displayName: "View Mode",
-        value: { value: "grid", displayName: "Grid" },
-        items: [
-            { value: "grid", displayName: "Grid" },
-            { value: "list", displayName: "List" },
-            { value: "gallery", displayName: "Gallery" }
-        ]
+        displayName: "Modo de Vista",
+        value: { value: "grid", label: "Cuadrícula" }
     });
 
-    enableSearch = new formattingSettings.ToggleSwitch({
+    enableSearch: FormattingSettingsSlice = new formattingSettings.ToggleSwitch({
         name: "enableSearch",
-        displayName: "Enable Search",
+        displayName: "Habilitar Búsqueda",
         value: true
     });
 
-    enableFilters = new formattingSettings.ToggleSwitch({
+    enableFilters: FormattingSettingsSlice = new formattingSettings.ToggleSwitch({
         name: "enableFilters",
-        displayName: "Enable Filters",
+        displayName: "Habilitar Filtros",
         value: true
     });
 
-    enableExport = new formattingSettings.ToggleSwitch({
+    enableExport: FormattingSettingsSlice = new formattingSettings.ToggleSwitch({
         name: "enableExport",
-        displayName: "Enable Export",
+        displayName: "Habilitar Exportación",
         value: true
     });
 
-    enableTooltips = new formattingSettings.ToggleSwitch({
+    enableTooltips: FormattingSettingsSlice = new formattingSettings.ToggleSwitch({
         name: "enableTooltips",
-        displayName: "Enable Tooltips",
+        displayName: "Habilitar Tooltips",
         value: true
+    });
+
+    profileImageSize: FormattingSettingsSlice = new formattingSettings.NumUpDown({
+        name: "profileImageSize",
+        displayName: "Tamaño de Imágenes de Perfil",
+        value: 25
+    });
+
+    maxProfileImages: FormattingSettingsSlice = new formattingSettings.NumUpDown({
+        name: "maxProfileImages",
+        displayName: "Máximo de Imágenes de Perfil",
+        value: 5
     });
 
     name: string = "cardSettings";
-    displayName: string = "Card Settings";
+    displayName: string = "Configuración de Tarjetas";
     slices: Array<FormattingSettingsSlice> = [
         this.cardWidth,
         this.cardHeight,
         this.showMetadata,
         this.showProgress,
+        this.progressColor,
         this.sortDirection,
         this.viewMode,
         this.enableSearch,
         this.enableFilters,
         this.enableExport,
-        this.enableTooltips
+        this.enableTooltips,
+        this.profileImageSize,
+        this.maxProfileImages
     ];
 }
 
 /**
  * Reader Settings Card
  */
-class ReaderSettingsCard extends FormattingSettingsCard {
-    backgroundColor = new formattingSettings.ColorPicker({
+export class ReaderSettingsCard extends FormattingSettingsCard {
+    backgroundColor: FormattingSettingsSlice = new formattingSettings.ColorPicker({
         name: "backgroundColor",
-        displayName: "Background Color",
-        value: { value: "#FFFFFF" }
+        displayName: "Color de Fondo",
+        value: { value: "#ffffff" }
     });
 
-    textColor = new formattingSettings.ColorPicker({
+    textColor: FormattingSettingsSlice = new formattingSettings.ColorPicker({
         name: "textColor",
-        displayName: "Text Color",
+        displayName: "Color de Texto",
         value: { value: "#000000" }
     });
 
-    fontSize = new formattingSettings.NumUpDown({
+    fontSize: FormattingSettingsSlice = new formattingSettings.NumUpDown({
         name: "fontSize",
-        displayName: "Font Size",
+        displayName: "Tamaño de Fuente",
         value: 16
     });
 
@@ -188,14 +204,14 @@ class ReaderSettingsCard extends FormattingSettingsCard {
         value: true
     });
 
-    enableImageZoom = new formattingSettings.ToggleSwitch({
+    enableImageZoom: FormattingSettingsSlice = new formattingSettings.ToggleSwitch({
         name: "enableImageZoom",
-        displayName: "Enable Image Zoom",
+        displayName: "Habilitar Zoom de Imágenes",
         value: true
     });
 
     name: string = "readerSettings";
-    displayName: string = "Reader Settings";
+    displayName: string = "Configuración del Lector";
     slices: Array<FormattingSettingsSlice> = [
         this.backgroundColor,
         this.textColor,
@@ -208,21 +224,21 @@ class ReaderSettingsCard extends FormattingSettingsCard {
 /**
  * Animation Settings Card
  */
-class AnimationSettingsCard extends FormattingSettingsCard {
-    enableAnimations = new formattingSettings.ToggleSwitch({
+export class AnimationSettingsCard extends FormattingSettingsCard {
+    enableAnimations: FormattingSettingsSlice = new formattingSettings.ToggleSwitch({
         name: "enableAnimations",
-        displayName: "Enable Animations",
+        displayName: "Habilitar Animaciones",
         value: true
     });
 
-    animationDuration = new formattingSettings.NumUpDown({
+    animationDuration: FormattingSettingsSlice = new formattingSettings.NumUpDown({
         name: "animationDuration",
-        displayName: "Animation Duration (ms)",
+        displayName: "Duración de Animación",
         value: 300
     });
 
     name: string = "animationSettings";
-    displayName: string = "Animation Settings";
+    displayName: string = "Configuración de Animaciones";
     slices: Array<FormattingSettingsSlice> = [
         this.enableAnimations,
         this.animationDuration
@@ -235,11 +251,11 @@ class AnimationSettingsCard extends FormattingSettingsCard {
 export class VisualFormattingSettingsModel extends FormattingSettingsModel {
     // Create formatting settings model formatting cards
     dataPointCard = new DataPointCardSettings();
-    cardSettingsCard = new CardSettingsCard();
-    readerSettingsCard = new ReaderSettingsCard();
-    animationSettingsCard = new AnimationSettingsCard();
+    cardSettingsCard: CardSettingsCard = new CardSettingsCard();
+    readerSettingsCard: ReaderSettingsCard = new ReaderSettingsCard();
+    animationSettingsCard: AnimationSettingsCard = new AnimationSettingsCard();
 
-    cards = [
+    cards: Array<FormattingSettingsCard> = [
         this.dataPointCard,
         this.cardSettingsCard,
         this.readerSettingsCard,

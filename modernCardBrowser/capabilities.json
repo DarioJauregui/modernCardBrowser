@@ -74,6 +74,16 @@
       "displayName": "Tooltip",
       "name": "tooltip",
       "kind": "Grouping"
+    },
+    {
+      "displayName": "Categoría",
+      "name": "category",
+      "kind": "Grouping"
+    },
+    {
+      "displayName": "Valores",
+      "name": "values",
+      "kind": "Measure"
     }
   ],
     "objects": {
@@ -117,7 +127,7 @@
             }
         },
         "cardSettings": {
-            "displayName": "Card Settings",
+            "displayName": "Configuración de Tarjetas",
             "properties": {
                 "cardWidth": {
                     "displayName": "Card Width",
@@ -126,21 +136,31 @@
                     }
                 },
                 "cardHeight": {
-                    "displayName": "Card Height",
+                    "displayName": "Altura de Tarjeta",
                     "type": {
                         "numeric": true
                     }
                 },
                 "showMetadata": {
-                    "displayName": "Show Metadata",
+                    "displayName": "Mostrar Metadatos",
                     "type": {
                         "bool": true
                     }
                 },
                 "showProgress": {
-                    "displayName": "Show Progress",
+                    "displayName": "Mostrar Barra de Progreso",
                     "type": {
                         "bool": true
+                    }
+                },
+                "progressColor": {
+                    "displayName": "Color de la Barra de Progreso",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
                     }
                 },
                 "sortDirection": {
@@ -159,55 +179,67 @@
                     }
                 },
                 "viewMode": {
-                    "displayName": "View Mode",
+                    "displayName": "Modo de Vista",
                     "type": {
                         "enumeration": [
                             {
                                 "value": "grid",
-                                "displayName": "Grid"
+                                "displayName": "Cuadrícula"
                             },
                             {
                                 "value": "list",
-                                "displayName": "List"
+                                "displayName": "Lista"
                             },
                             {
                                 "value": "gallery",
-                                "displayName": "Gallery"
+                                "displayName": "Galería"
                             }
                         ]
                     }
                 },
                 "enableSearch": {
-                    "displayName": "Enable Search",
+                    "displayName": "Habilitar Búsqueda",
                     "type": {
                         "bool": true
                     }
                 },
                 "enableFilters": {
-                    "displayName": "Enable Filters",
+                    "displayName": "Habilitar Filtros",
                     "type": {
                         "bool": true
                     }
                 },
                 "enableExport": {
-                    "displayName": "Enable Export",
+                    "displayName": "Habilitar Exportación",
                     "type": {
                         "bool": true
                     }
                 },
                 "enableTooltips": {
-                    "displayName": "Enable Tooltips",
+                    "displayName": "Habilitar Tooltips",
                     "type": {
                         "bool": true
+                    }
+                },
+                "profileImageSize": {
+                    "displayName": "Tamaño de Imágenes de Perfil",
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "maxProfileImages": {
+                    "displayName": "Máximo de Imágenes de Perfil",
+                    "type": {
+                        "numeric": true
                     }
                 }
             }
         },
         "readerSettings": {
-            "displayName": "Reader Settings",
+            "displayName": "Configuración del Lector",
             "properties": {
                 "backgroundColor": {
-                    "displayName": "Background Color",
+                    "displayName": "Color de Fondo",
                     "type": {
                         "fill": {
                             "solid": {
@@ -217,7 +249,7 @@
                     }
                 },
                 "textColor": {
-                    "displayName": "Text Color",
+                    "displayName": "Color de Texto",
                     "type": {
                         "fill": {
                             "solid": {
@@ -227,11 +259,9 @@
                     }
                 },
                 "fontSize": {
-                    "displayName": "Font Size",
+                    "displayName": "Tamaño de Fuente",
                     "type": {
-                        "formatting": {
-                            "fontSize": true
-                        }
+                        "numeric": true
                     }
                 },
                 "showBackButton": {
@@ -241,7 +271,7 @@
                     }
                 },
                 "enableImageZoom": {
-                    "displayName": "Enable Image Zoom",
+                    "displayName": "Habilitar Zoom de Imágenes",
                     "type": {
                         "bool": true
                     }
@@ -249,16 +279,16 @@
             }
         },
         "animationSettings": {
-            "displayName": "Animation Settings",
+            "displayName": "Configuración de Animaciones",
             "properties": {
                 "enableAnimations": {
-                    "displayName": "Enable Animations",
+                    "displayName": "Habilitar Animaciones",
                     "type": {
                         "bool": true
                     }
                 },
                 "animationDuration": {
-                    "displayName": "Animation Duration (ms)",
+                    "displayName": "Duración de Animación",
                     "type": {
                         "numeric": true
                     }
@@ -281,7 +311,7 @@
                     "select": [
                         {
                             "bind": {
-                                "to": "measure"
+                                "to": "values"
                             }
                         }
                     ]

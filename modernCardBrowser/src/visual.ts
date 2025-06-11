@@ -90,7 +90,7 @@ export class Visual implements IVisual {
             return;
         }
 
-        const dataView: DataView = options.dataViews[0];
+        const dataView = options.dataViews[0];
         this.cards = this.convertDataViewToCards(dataView);
         this.applyFiltersAndSearch();
         this.renderCards();
@@ -124,12 +124,14 @@ export class Visual implements IVisual {
     }
 
     private convertDataViewToCards(dataView: DataView): CardData[] {
-        const categorical: DataViewCategorical = dataView.categorical;
-        if (!categorical) return [];
-
         const cards: CardData[] = [];
-        const categories = categorical.categories;
-        const values = categorical.values;
+        
+        if (!dataView.categorical || !dataView.categorical.categories) {
+            return cards;
+        }
+
+        const categories = dataView.categorical.categories;
+        const values = dataView.categorical.values;
 
         // Obtener los índices de las columnas necesarias
         const idIndex = categories.findIndex(c => c.source.displayName === "Document Id");
@@ -332,19 +334,15 @@ export class Visual implements IVisual {
             .append('div')
             .attr('class', 'card')
             .style('height', `${this.formattingSettings.cardSettingsCard.cardHeight.value}px`)
-            .on('click', (event, d) => this.showReader(d))
+            .on('click', (event, d) => {
+                if (this.selectedCard === d) {
+                    this.selectedCard = null;
+                    this.renderCards();
+                } else {
+                    this.showReader(d);
+                }
+            })
             .on('mouseover', (event, d) => this.showTooltip(event, d));
-
-        // Añadir botón de exportación si está habilitado
-        if (this.formattingSettings.cardSettingsCard.enableExport.value) {
-            cards.append('button')
-                .attr('class', 'export-button')
-                .text('Exportar')
-                .on('click', (event, d) => {
-                    event.stopPropagation();
-                    this.exportCard(d);
-                });
-        }
 
         // Añadir la barra superior
         cards.append('div')
@@ -366,38 +364,35 @@ export class Visual implements IVisual {
             .attr('class', 'card-title')
             .text(d => d.title);
 
-        // Añadir el resumen
-        cardContent.append('p')
-            .attr('class', 'card-summary')
-            .text(d => d.summary);
-
-        // Añadir los subtítulos
-        cardContent.append('div')
-            .attr('class', 'card-subtitle')
-            .html(d => d.subtitle.join(' • '));
-
-        // Añadir los metadatos si está habilitado
-        if (this.formattingSettings.cardSettingsCard.showMetadata.value) {
-            cardContent.append('div')
-                .attr('class', 'card-metadata')
-                .html(d => {
-                    const metadata = d.metadata;
-                    if (typeof metadata === 'object') {
-                        return Object.entries(metadata)
-                            .map(([key, value]) => `<div><strong>${key}:</strong> ${value}</div>`)
-                            .join('');
-                    }
-                    return '';
-                });
-        }
-
         // Añadir la barra de progreso si está habilitada
         if (this.formattingSettings.cardSettingsCard.showProgress.value) {
             cardContent.append('div')
                 .attr('class', 'card-progress')
                 .append('div')
                 .attr('class', 'progress-bar')
-                .style('width', d => `${d.progress}%`);
+                .style('width', d => `${d.progress}%`)
+                .style('background-color', this.formattingSettings.cardSettingsCard.progressColor.value.value);
+        }
+
+        // Añadir el resumen
+        cardContent.append('p')
+            .attr('class', 'card-summary')
+            .text(d => d.summary);
+
+        // Añadir el subtítulo
+        cardContent.append('div')
+            .attr('class', 'card-subtitle')
+            .text(d => d.subtitle.join(' • '));
+
+        // Añadir los metadatos si están habilitados
+        if (this.formattingSettings.cardSettingsCard.showMetadata.value) {
+            const metadataContainer = cardContent.append('div')
+                .attr('class', 'card-metadata');
+
+            Object.entries(d => d.metadata).forEach(([key, value]) => {
+                metadataContainer.append('div')
+                    .html(`<strong>${key}:</strong> ${value}`);
+            });
         }
 
         // Añadir la insignia
@@ -407,19 +402,32 @@ export class Visual implements IVisual {
             .attr('alt', 'Badge');
 
         // Añadir las imágenes de perfil
-        const profileImages = cards.append('div')
+        const profileImagesContainer = cards.append('div')
             .attr('class', 'profile-images');
 
-        profileImages.selectAll('img')
-            .data(d => d.profileImages)
+        // Limitar el número de imágenes según la configuración
+        const maxImages = this.formattingSettings.cardSettingsCard.maxProfileImages.value;
+        const imageSize = this.formattingSettings.cardSettingsCard.profileImageSize.value;
+
+        profileImagesContainer.selectAll('img')
+            .data(d => d.profileImages.slice(0, maxImages))
             .enter()
             .append('img')
             .attr('src', d => d)
             .attr('alt', 'Profile')
-            .style('width', '30px')
-            .style('height', '30px')
-            .style('border-radius', '50%')
-            .style('margin-right', '5px');
+            .style('width', `${imageSize}px`)
+            .style('height', `${imageSize}px`);
+
+        // Añadir botón de exportación si está habilitado
+        if (this.formattingSettings.cardSettingsCard.enableExport.value) {
+            cards.append('button')
+                .attr('class', 'export-button')
+                .text('Exportar')
+                .on('click', (event, d) => {
+                    event.stopPropagation();
+                    this.exportCard(d);
+                });
+        }
 
         // Aplicar animaciones si están habilitadas
         if (this.formattingSettings.animationSettingsCard.enableAnimations.value) {
@@ -444,16 +452,14 @@ export class Visual implements IVisual {
             .style('color', this.formattingSettings.readerSettingsCard.textColor.value.value)
             .style('font-size', `${this.formattingSettings.readerSettingsCard.fontSize.value}px`);
 
-        // Añadir botón de regreso si está habilitado
-        if (this.formattingSettings.readerSettingsCard.showBackButton.value) {
-            readerContainer.append('button')
-                .attr('class', 'back-button')
-                .text('← Volver')
-                .on('click', () => {
-                    this.selectedCard = null;
-                    this.renderCards();
-                });
-        }
+        // Añadir botón de cierre
+        readerContainer.append('button')
+            .attr('class', 'close-button')
+            .html('×')
+            .on('click', () => {
+                this.selectedCard = null;
+                this.renderCards();
+            });
 
         // Añadir el contenido del lector
         readerContainer.append('h1')

@@ -66,6 +66,7 @@ p {
         grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
         gap: 20px;
         padding: 20px 0;
+        align-items: start;
     }
 
     .card-list {
@@ -168,6 +169,19 @@ p {
                 font-weight: 600;
             }
 
+            .card-progress {
+                height: 4px;
+                background: #eee;
+                border-radius: 2px;
+                margin: 10px 0;
+                overflow: hidden;
+
+                .progress-bar {
+                    height: 100%;
+                    transition: width 0.3s ease;
+                }
+            }
+
             .card-summary {
                 margin: 0 0 10px;
                 font-size: 14px;
@@ -188,20 +202,6 @@ p {
                 padding-top: 10px;
                 border-top: 1px solid #eee;
             }
-
-            .card-progress {
-                height: 4px;
-                background: #eee;
-                border-radius: 2px;
-                margin-top: 10px;
-                overflow: hidden;
-
-                .progress-bar {
-                    height: 100%;
-                    background: #0078d4;
-                    transition: width 0.3s ease;
-                }
-            }
         }
 
         .card-badge {
@@ -218,13 +218,14 @@ p {
             bottom: 10px;
             right: 10px;
             display: flex;
+            gap: 5px;
 
             img {
                 width: 25px;
                 height: 25px;
                 border-radius: 50%;
                 border: 2px solid white;
-                margin-left: -10px;
+                object-fit: cover;
             }
         }
 
@@ -257,20 +258,28 @@ p {
         padding: 40px;
         overflow-y: auto;
 
-        .back-button {
+        .close-button {
             position: fixed;
             top: 20px;
-            left: 20px;
-            padding: 10px 20px;
-            background: #0078d4;
-            color: white;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background: #f5f5f5;
+            color: #333;
             border: none;
-            border-radius: 4px;
+            border-radius: 50%;
+            font-size: 24px;
+            line-height: 1;
             cursor: pointer;
-            transition: background 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            z-index: 1001;
 
             &:hover {
-                background: #106ebe;
+                background: #e0e0e0;
+                transform: rotate(90deg);
             }
         }
 
