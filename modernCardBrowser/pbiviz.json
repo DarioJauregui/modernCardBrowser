@@ -1,0 +1,22 @@
+{
+  "visual": {
+    "name": "ModernCardBrowser",
+    "displayName": "Modern Card Browser",
+    "guid": "ModernCardBrowser_DARIO_001",
+    "visualClassName": "Visual",
+    "version": "1.0.0.0",
+    "description": "A modern implementation of the Card Browser visual.",
+    "supportUrl": "https://community.powerbi.com",
+    "gitHubUrl": ""
+  },
+  "apiVersion": "5.4.0",
+  "author": {
+    "name": "Dario",
+    "email": "dariojauregui4@gmail.com"
+  },
+  "assets": {
+    "icon": "assets/icon.png"
+  },
+  "style": "style/visual.less",
+  "capabilities": "capabilities.json"
+}

@@ -1,0 +1,139 @@
+{
+    "dataRoles": [
+    {
+      "name": "id",
+      "kind": "Grouping",
+      "displayName": "Document Id",
+      "description": "Unique ID for the document"
+    },
+    {
+      "name": "title",
+      "kind": "Grouping",
+      "displayName": "Title",
+      "description": "Title of the document; shown on cards and in the reader"
+    },
+    {
+      "name": "summary",
+      "displayName": "Preview",
+      "description": "Preview text; only displayed on cards",
+      "kind": "Measure"
+    },
+    {
+      "name": "content",
+      "displayName": "Content",
+      "description": "Full content to display in the reader",
+      "kind": "Measure"
+    },
+    {
+      "name": "imageUrl",
+      "displayName": "Title Image (URL)",
+      "description": "Main image(s) for the document; displayed on cards and in the reader",
+      "kind": "Grouping"
+    },
+    {
+      "name": "subtitle",
+      "displayName": "Subtitle Fields",
+      "description": "Text items to display as a subtitle",
+      "kind": "Grouping"
+    },
+    {
+      "name": "sourceImage",
+      "displayName": "Badge (Image URL)",
+      "description": "URL for an image to display in the top-right corner of the card",
+      "kind": "Grouping"
+    },
+    {
+      "name": "metadata",
+      "displayName": "MetaData Fields",
+      "description": "Key-value pairs for the table on the back of the cards",
+      "kind": "Measure"
+    },
+    {
+      "name": "topBarColor",
+      "displayName": "Top Bar Color",
+      "description": "Color of the bar at the top of the card",
+      "kind": "Grouping"
+    },
+    {
+      "name": "dummySortingField",
+      "displayName": "Sorting Field",
+      "description": "Field that can be used to sort the visual's data based on an arbitrary column",
+      "kind": "GroupingOrMeasure"
+    },
+    {
+      "displayName": "Fotos de perfil",
+      "name": "profileImages",
+      "kind": "Grouping"
+    },
+    {
+      "displayName": "Progreso",
+      "name": "progress",
+      "kind": "Measure"
+    }
+  ],
+    "objects": {
+        "dataPoint": {
+            "properties": {
+                "defaultColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "showAllDataPoints": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "fill": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "fillRule": {
+                    "type": {
+                        "fill": {}
+                    }
+                },
+                 "fontSize": {
+                    "type": {
+                        "formatting": {
+                            "fontSize": true
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "dataViewMappings": [
+        {
+            "categorical": {
+                "categories": {
+                    "for": {
+                        "in": "category"
+                    },
+                    "dataReductionAlgorithm": {
+                        "top": {}
+                    }
+                },
+                "values": {
+                    "select": [
+                        {
+                            "bind": {
+                                "to": "measure"
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+    ],
+    "privileges": []
+}

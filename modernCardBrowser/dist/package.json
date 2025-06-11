@@ -1,0 +1,17 @@
+{
+		"version": "1.0.0.0",
+		"author": {"name":"Dario","email":"dariojauregui4@gmail.com"},
+		"resources": [
+			{
+				"resourceId": "rId0",
+				"sourceType": 5,
+				"file": "resources/ModernCardBrowser_DARIO_001.pbiviz.json"
+			}
+		],
+		"visual": {"name":"ModernCardBrowser","displayName":"Modern Card Browser","guid":"ModernCardBrowser_DARIO_001","visualClassName":"Visual","version":"1.0.0.0","description":"A modern implementation of the Card Browser visual.","supportUrl":"https://community.powerbi.com","gitHubUrl":""},
+		"metadata": {
+			"pbivizjson": {
+				"resourceId": "rId0"
+			}
+		}
+	}
