@@ -38,6 +38,7 @@ import DataView = powerbi.DataView;
 import DataViewCategorical = powerbi.DataViewCategorical;
 
 import { VisualFormattingSettingsModel } from "./settings";
+import { formattingSettings } from "powerbi-visuals-utils-formattingmodel";
 
 interface CardData {
     id: string;
@@ -96,11 +97,15 @@ export class Visual implements IVisual {
         this.renderCards();
     }
 
+    private getSliceValue<T>(slice: formattingSettings.Slice): T {
+        return (slice as any).value as T;
+    }
+
     private applyFiltersAndSearch() {
         this.filteredCards = [...this.cards];
 
         // Aplicar búsqueda si está habilitada
-        if (this.formattingSettings.cardSettingsCard.enableSearch.value && this.searchTerm) {
+        if (this.getSliceValue<boolean>(this.formattingSettings.cardSettingsCard.enableSearch)) {
             const searchLower = this.searchTerm.toLowerCase();
             this.filteredCards = this.filteredCards.filter(card => 
                 card.title.toLowerCase().includes(searchLower) ||
@@ -111,7 +116,7 @@ export class Visual implements IVisual {
         }
 
         // Aplicar filtros si están habilitados
-        if (this.formattingSettings.cardSettingsCard.enableFilters.value) {
+        if (this.getSliceValue<boolean>(this.formattingSettings.cardSettingsCard.enableFilters)) {
             this.activeFilters.forEach((values, key) => {
                 if (values.length > 0) {
                     this.filteredCards = this.filteredCards.filter(card => {
@@ -169,7 +174,7 @@ export class Visual implements IVisual {
 
         // Ordenar las tarjetas si hay un campo de ordenamiento
         if (sortingFieldIndex !== -1) {
-            const sortDirection = this.formattingSettings.cardSettingsCard.sortDirection.value.value;
+            const sortDirection = this.getSliceValue<string>(this.formattingSettings.cardSettingsCard.sortDirection);
             cards.sort((a, b) => {
                 const aValue = categories[sortingFieldIndex].values[cards.indexOf(a)]?.toString() || '';
                 const bValue = categories[sortingFieldIndex].values[cards.indexOf(b)]?.toString() || '';
@@ -183,7 +188,7 @@ export class Visual implements IVisual {
     }
 
     private showZoomedImage(imageUrl: string) {
-        if (!this.formattingSettings.readerSettingsCard.enableImageZoom.value) return;
+        if (!this.getSliceValue<boolean>(this.formattingSettings.readerSettingsCard.enableImageZoom)) return;
 
         const zoomContainer = d3.select('.image-zoom-container');
         zoomContainer.style('display', 'flex');
@@ -206,7 +211,7 @@ export class Visual implements IVisual {
     }
 
     private exportCard(card: CardData) {
-        if (!this.formattingSettings.cardSettingsCard.enableExport.value) return;
+        if (!this.getSliceValue<boolean>(this.formattingSettings.cardSettingsCard.enableExport)) return;
 
         const cardElement = document.createElement('div');
         cardElement.className = 'card';
@@ -217,11 +222,11 @@ export class Visual implements IVisual {
                 <h3 class="card-title">${card.title}</h3>
                 <p class="card-summary">${card.summary}</p>
                 <div class="card-subtitle">${card.subtitle.join(' • ')}</div>
-                ${this.formattingSettings.cardSettingsCard.showMetadata.value ? 
+                ${this.getSliceValue<boolean>(this.formattingSettings.cardSettingsCard.showMetadata) ? 
                     `<div class="card-metadata">${Object.entries(card.metadata)
                         .map(([key, value]) => `<div><strong>${key}:</strong> ${value}</div>`)
                         .join('')}</div>` : ''}
-                ${this.formattingSettings.cardSettingsCard.showProgress.value ? 
+                ${this.getSliceValue<boolean>(this.formattingSettings.cardSettingsCard.showProgress) ? 
                     `<div class="card-progress"><div class="progress-bar" style="width: ${card.progress}%"></div></div>` : ''}
             </div>
             <img class="card-badge" src="${card.sourceImage}" alt="Badge">
@@ -240,7 +245,7 @@ export class Visual implements IVisual {
     }
 
     private showTooltip(event: MouseEvent, card: CardData) {
-        if (!this.formattingSettings.cardSettingsCard.enableTooltips.value || !card.tooltip) return;
+        if (!this.getSliceValue<boolean>(this.formattingSettings.cardSettingsCard.enableTooltips) || !card.tooltip) return;
 
         const tooltip = d3.select('body')
             .append('div')
@@ -259,7 +264,7 @@ export class Visual implements IVisual {
         this.container.selectAll('*').remove();
 
         // Crear la barra de búsqueda si está habilitada
-        if (this.formattingSettings.cardSettingsCard.enableSearch.value) {
+        if (this.getSliceValue<boolean>(this.formattingSettings.cardSettingsCard.enableSearch)) {
             const searchContainer = this.container
                 .append('div')
                 .attr('class', 'search-container');
@@ -276,7 +281,7 @@ export class Visual implements IVisual {
         }
 
         // Crear los filtros si están habilitados
-        if (this.formattingSettings.cardSettingsCard.enableFilters.value) {
+        if (this.getSliceValue<boolean>(this.formattingSettings.cardSettingsCard.enableFilters)) {
             const filtersContainer = this.container
                 .append('div')
                 .attr('class', 'filters-container');
@@ -321,10 +326,11 @@ export class Visual implements IVisual {
         }
 
         // Crear el contenedor de tarjetas
+        const viewMode = this.getSliceValue<string>(this.formattingSettings.cardSettingsCard.viewMode);
         const cardContainer = this.container
             .append('div')
-            .attr('class', this.formattingSettings.cardSettingsCard.viewMode.value === 'grid' ? 'card-grid' : 
-                          this.formattingSettings.cardSettingsCard.viewMode.value === 'list' ? 'card-list' : 'card-gallery');
+            .attr('class', viewMode === 'grid' ? 'card-grid' : 
+                          viewMode === 'list' ? 'card-list' : 'card-gallery');
 
         // Crear las tarjetas
         const cards = cardContainer
@@ -333,7 +339,7 @@ export class Visual implements IVisual {
             .enter()
             .append('div')
             .attr('class', 'card')
-            .style('height', `${this.formattingSettings.cardSettingsCard.cardHeight.value}px`)
+            .style('height', `${this.getSliceValue<number>(this.formattingSettings.cardSettingsCard.cardHeight)}px`)
             .on('click', (event, d) => {
                 if (this.selectedCard === d) {
                     this.selectedCard = null;
@@ -365,13 +371,13 @@ export class Visual implements IVisual {
             .text(d => d.title);
 
         // Añadir la barra de progreso si está habilitada
-        if (this.formattingSettings.cardSettingsCard.showProgress.value) {
+        if (this.getSliceValue<boolean>(this.formattingSettings.cardSettingsCard.showProgress)) {
             cardContent.append('div')
                 .attr('class', 'card-progress')
                 .append('div')
                 .attr('class', 'progress-bar')
                 .style('width', d => `${d.progress}%`)
-                .style('background-color', this.formattingSettings.cardSettingsCard.progressColor.value.value);
+                .style('background-color', this.getSliceValue<{ value: string }>(this.formattingSettings.cardSettingsCard.progressColor).value);
         }
 
         // Añadir el resumen
@@ -385,7 +391,7 @@ export class Visual implements IVisual {
             .text(d => d.subtitle.join(' • '));
 
         // Añadir los metadatos si están habilitados
-        if (this.formattingSettings.cardSettingsCard.showMetadata.value) {
+        if (this.getSliceValue<boolean>(this.formattingSettings.cardSettingsCard.showMetadata)) {
             const metadataContainer = cardContent.append('div')
                 .attr('class', 'card-metadata');
 
@@ -406,8 +412,8 @@ export class Visual implements IVisual {
             .attr('class', 'profile-images');
 
         // Limitar el número de imágenes según la configuración
-        const maxImages = this.formattingSettings.cardSettingsCard.maxProfileImages.value;
-        const imageSize = this.formattingSettings.cardSettingsCard.profileImageSize.value;
+        const maxImages = this.getSliceValue<number>(this.formattingSettings.cardSettingsCard.maxProfileImages);
+        const imageSize = this.getSliceValue<number>(this.formattingSettings.cardSettingsCard.profileImageSize);
 
         profileImagesContainer.selectAll('img')
             .data(d => d.profileImages.slice(0, maxImages))
@@ -419,7 +425,7 @@ export class Visual implements IVisual {
             .style('height', `${imageSize}px`);
 
         // Añadir botón de exportación si está habilitado
-        if (this.formattingSettings.cardSettingsCard.enableExport.value) {
+        if (this.getSliceValue<boolean>(this.formattingSettings.cardSettingsCard.enableExport)) {
             cards.append('button')
                 .attr('class', 'export-button')
                 .text('Exportar')
@@ -430,10 +436,10 @@ export class Visual implements IVisual {
         }
 
         // Aplicar animaciones si están habilitadas
-        if (this.formattingSettings.animationSettingsCard.enableAnimations.value) {
+        if (this.getSliceValue<boolean>(this.formattingSettings.animationSettingsCard.enableAnimations)) {
             cards.style('opacity', 0)
                 .transition()
-                .duration(this.formattingSettings.animationSettingsCard.animationDuration.value)
+                .duration(this.getSliceValue<number>(this.formattingSettings.animationSettingsCard.animationDuration))
                 .style('opacity', 1);
         }
     }
@@ -448,9 +454,9 @@ export class Visual implements IVisual {
         const readerContainer = this.container
             .append('div')
             .attr('class', 'reader-container')
-            .style('background-color', this.formattingSettings.readerSettingsCard.backgroundColor.value.value)
-            .style('color', this.formattingSettings.readerSettingsCard.textColor.value.value)
-            .style('font-size', `${this.formattingSettings.readerSettingsCard.fontSize.value}px`);
+            .style('background-color', this.getSliceValue<{ value: string }>(this.formattingSettings.readerSettingsCard.backgroundColor).value)
+            .style('color', this.getSliceValue<{ value: string }>(this.formattingSettings.readerSettingsCard.textColor).value)
+            .style('font-size', `${this.getSliceValue<number>(this.formattingSettings.readerSettingsCard.fontSize)}px`);
 
         // Añadir botón de cierre
         readerContainer.append('button')
@@ -491,10 +497,10 @@ export class Visual implements IVisual {
         }
 
         // Aplicar animaciones si están habilitadas
-        if (this.formattingSettings.animationSettingsCard.enableAnimations.value) {
+        if (this.getSliceValue<boolean>(this.formattingSettings.animationSettingsCard.enableAnimations)) {
             readerContainer.style('opacity', 0)
                 .transition()
-                .duration(this.formattingSettings.animationSettingsCard.animationDuration.value)
+                .duration(this.getSliceValue<number>(this.formattingSettings.animationSettingsCard.animationDuration))
                 .style('opacity', 1);
         }
     }

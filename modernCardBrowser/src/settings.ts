@@ -118,7 +118,12 @@ export class CardSettingsCard extends FormattingSettingsCard {
     viewMode: FormattingSettingsSlice = new formattingSettings.ItemDropdown({
         name: "viewMode",
         displayName: "Modo de Vista",
-        value: { value: "grid", label: "Cuadrícula" }
+        value: { value: "grid", displayName: "Cuadrícula" },
+        items: [
+            { value: "grid", displayName: "Cuadrícula" },
+            { value: "list", displayName: "Lista" },
+            { value: "gallery", displayName: "Galería" }
+        ]
     });
 
     enableSearch: FormattingSettingsSlice = new formattingSettings.ToggleSwitch({
