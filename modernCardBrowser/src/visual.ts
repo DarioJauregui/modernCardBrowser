@@ -92,7 +92,7 @@ export class Visual implements IVisual {
         }
 
         const dataView = options.dataViews[0];
-        this.cards = this.convertDataViewToCards(dataView);
+        this.cards = this.convertDataViewToCards([dataView]);
         this.applyFiltersAndSearch();
         this.renderCards();
     }
@@ -128,15 +128,15 @@ export class Visual implements IVisual {
         }
     }
 
-    private convertDataViewToCards(dataView: DataView): CardData[] {
+    private convertDataViewToCards(dataViews: DataView[]): CardData[] {
         const cards: CardData[] = [];
         
-        if (!dataView.categorical || !dataView.categorical.categories) {
+        if (!dataViews || !dataViews[0] || !dataViews[0].categorical || !dataViews[0].categorical.categories) {
             return cards;
         }
 
-        const categories = dataView.categorical.categories;
-        const values = dataView.categorical.values;
+        const categories = dataViews[0].categorical.categories;
+        const values = dataViews[0].categorical.values;
 
         // Obtener los índices de las columnas necesarias
         const idIndex = categories.findIndex(c => c.source.displayName === "Document Id");
