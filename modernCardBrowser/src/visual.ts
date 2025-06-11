@@ -85,14 +85,13 @@ export class Visual implements IVisual {
     }
 
     public update(options: VisualUpdateOptions) {
-        this.formattingSettings = this.formattingSettingsService.populateFormattingSettingsModel(VisualFormattingSettingsModel, options.dataViews[0]);
-        
         if (!options.dataViews || !options.dataViews[0]) {
             return;
         }
 
+        this.formattingSettings = this.formattingSettingsService.populateFormattingSettingsModel(VisualFormattingSettingsModel, options.dataViews[0]);
         const dataView = options.dataViews[0];
-        this.cards = this.convertDataViewToCards([dataView]);
+        this.cards = this.convertDataViewToCards(dataView);
         this.applyFiltersAndSearch();
         this.renderCards();
     }
@@ -128,15 +127,15 @@ export class Visual implements IVisual {
         }
     }
 
-    private convertDataViewToCards(dataViews: DataView[]): CardData[] {
+    private convertDataViewToCards(dataView: DataView): CardData[] {
         const cards: CardData[] = [];
         
-        if (!dataViews || !dataViews[0] || !dataViews[0].categorical || !dataViews[0].categorical.categories) {
+        if (!dataView.categorical || !dataView.categorical.categories) {
             return cards;
         }
 
-        const categories = dataViews[0].categorical.categories;
-        const values = dataViews[0].categorical.values;
+        const categories = dataView.categorical.categories;
+        const values = dataView.categorical.values;
 
         // Obtener los índices de las columnas necesarias
         const idIndex = categories.findIndex(c => c.source.displayName === "Document Id");
