@@ -69,6 +69,11 @@
       "displayName": "Progreso",
       "name": "progress",
       "kind": "Measure"
+    },
+    {
+      "displayName": "Tooltip",
+      "name": "tooltip",
+      "kind": "Grouping"
     }
   ],
     "objects": {
@@ -110,6 +115,155 @@
                     }
                 }
             }
+        },
+        "cardSettings": {
+            "displayName": "Card Settings",
+            "properties": {
+                "cardWidth": {
+                    "displayName": "Card Width",
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "cardHeight": {
+                    "displayName": "Card Height",
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "showMetadata": {
+                    "displayName": "Show Metadata",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "showProgress": {
+                    "displayName": "Show Progress",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "sortDirection": {
+                    "displayName": "Sort Direction",
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "asc",
+                                "displayName": "Ascending"
+                            },
+                            {
+                                "value": "desc",
+                                "displayName": "Descending"
+                            }
+                        ]
+                    }
+                },
+                "viewMode": {
+                    "displayName": "View Mode",
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "grid",
+                                "displayName": "Grid"
+                            },
+                            {
+                                "value": "list",
+                                "displayName": "List"
+                            },
+                            {
+                                "value": "gallery",
+                                "displayName": "Gallery"
+                            }
+                        ]
+                    }
+                },
+                "enableSearch": {
+                    "displayName": "Enable Search",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "enableFilters": {
+                    "displayName": "Enable Filters",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "enableExport": {
+                    "displayName": "Enable Export",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "enableTooltips": {
+                    "displayName": "Enable Tooltips",
+                    "type": {
+                        "bool": true
+                    }
+                }
+            }
+        },
+        "readerSettings": {
+            "displayName": "Reader Settings",
+            "properties": {
+                "backgroundColor": {
+                    "displayName": "Background Color",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "textColor": {
+                    "displayName": "Text Color",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "fontSize": {
+                    "displayName": "Font Size",
+                    "type": {
+                        "formatting": {
+                            "fontSize": true
+                        }
+                    }
+                },
+                "showBackButton": {
+                    "displayName": "Show Back Button",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "enableImageZoom": {
+                    "displayName": "Enable Image Zoom",
+                    "type": {
+                        "bool": true
+                    }
+                }
+            }
+        },
+        "animationSettings": {
+            "displayName": "Animation Settings",
+            "properties": {
+                "enableAnimations": {
+                    "displayName": "Enable Animations",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "animationDuration": {
+                    "displayName": "Animation Duration (ms)",
+                    "type": {
+                        "numeric": true
+                    }
+                }
+            }
         }
     },
     "dataViewMappings": [
@@ -119,8 +273,8 @@
                     "for": {
                         "in": "category"
                     },
-                    "dataReductionAlgorithm": {
-                        "top": {}
+                    "dataReduction": {
+                        "top": 1000
                     }
                 },
                 "values": {

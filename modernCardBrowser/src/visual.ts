@@ -29,6 +29,7 @@ import powerbi from "powerbi-visuals-api";
 import { FormattingSettingsService } from "powerbi-visuals-utils-formattingmodel";
 import "./../style/visual.less";
 import * as d3 from 'd3';
+import html2canvas from 'html2canvas';
 
 import VisualConstructorOptions = powerbi.extensibility.visual.VisualConstructorOptions;
 import VisualUpdateOptions = powerbi.extensibility.visual.VisualUpdateOptions;
@@ -50,6 +51,7 @@ interface CardData {
     topBarColor: string;
     profileImages: string[];
     progress: number;
+    tooltip?: string;
 }
 
 export class Visual implements IVisual {
@@ -57,7 +59,12 @@ export class Visual implements IVisual {
     private formattingSettings: VisualFormattingSettingsModel;
     private formattingSettingsService: FormattingSettingsService;
     private cards: CardData[] = [];
+    private filteredCards: CardData[] = [];
     private container: d3.Selection<HTMLElement, any, any, any>;
+    private selectedCard: CardData | null = null;
+    private searchTerm: string = '';
+    private activeFilters: Map<string, string[]> = new Map();
+    private zoomedImage: HTMLElement | null = null;
 
     constructor(options: VisualConstructorOptions) {
         this.formattingSettingsService = new FormattingSettingsService();
@@ -67,6 +74,13 @@ export class Visual implements IVisual {
         this.container = d3.select(this.target)
             .append('div')
             .attr('class', 'card-browser-container');
+
+        // Crear el contenedor para el zoom de imágenes
+        d3.select(this.target)
+            .append('div')
+            .attr('class', 'image-zoom-container')
+            .style('display', 'none')
+            .on('click', () => this.closeZoomedImage());
     }
 
     public update(options: VisualUpdateOptions) {
@@ -78,7 +92,35 @@ export class Visual implements IVisual {
 
         const dataView: DataView = options.dataViews[0];
         this.cards = this.convertDataViewToCards(dataView);
+        this.applyFiltersAndSearch();
         this.renderCards();
+    }
+
+    private applyFiltersAndSearch() {
+        this.filteredCards = [...this.cards];
+
+        // Aplicar búsqueda si está habilitada
+        if (this.formattingSettings.cardSettingsCard.enableSearch.value && this.searchTerm) {
+            const searchLower = this.searchTerm.toLowerCase();
+            this.filteredCards = this.filteredCards.filter(card => 
+                card.title.toLowerCase().includes(searchLower) ||
+                card.summary.toLowerCase().includes(searchLower) ||
+                card.content.toLowerCase().includes(searchLower) ||
+                card.subtitle.some(sub => sub.toLowerCase().includes(searchLower))
+            );
+        }
+
+        // Aplicar filtros si están habilitados
+        if (this.formattingSettings.cardSettingsCard.enableFilters.value) {
+            this.activeFilters.forEach((values, key) => {
+                if (values.length > 0) {
+                    this.filteredCards = this.filteredCards.filter(card => {
+                        const metadata = card.metadata[key];
+                        return metadata && values.includes(metadata.toString());
+                    });
+                }
+            });
+        }
     }
 
     private convertDataViewToCards(dataView: DataView): CardData[] {
@@ -103,6 +145,7 @@ export class Visual implements IVisual {
         const topBarColorIndex = categories.findIndex(c => c.source.displayName === "Top Bar Color");
         const profileImagesIndex = categories.findIndex(c => c.source.displayName === "Fotos de perfil");
         const progressIndex = values.findIndex(v => v.source.displayName === "Progreso");
+        const sortingFieldIndex = categories.findIndex(c => c.source.displayName === "Sorting Field");
 
         // Crear las tarjetas
         for (let i = 0; i < categories[0].values.length; i++) {
@@ -122,25 +165,186 @@ export class Visual implements IVisual {
             cards.push(card);
         }
 
+        // Ordenar las tarjetas si hay un campo de ordenamiento
+        if (sortingFieldIndex !== -1) {
+            const sortDirection = this.formattingSettings.cardSettingsCard.sortDirection.value.value;
+            cards.sort((a, b) => {
+                const aValue = categories[sortingFieldIndex].values[cards.indexOf(a)]?.toString() || '';
+                const bValue = categories[sortingFieldIndex].values[cards.indexOf(b)]?.toString() || '';
+                return sortDirection === 'asc' ? 
+                    aValue.localeCompare(bValue) : 
+                    bValue.localeCompare(aValue);
+            });
+        }
+
         return cards;
+    }
+
+    private showZoomedImage(imageUrl: string) {
+        if (!this.formattingSettings.readerSettingsCard.enableImageZoom.value) return;
+
+        const zoomContainer = d3.select('.image-zoom-container');
+        zoomContainer.style('display', 'flex');
+
+        const img = zoomContainer.append('img')
+            .attr('src', imageUrl)
+            .attr('class', 'zoomed-image');
+
+        this.zoomedImage = img.node();
+    }
+
+    private closeZoomedImage() {
+        if (this.zoomedImage) {
+            d3.select('.image-zoom-container')
+                .style('display', 'none')
+                .selectAll('*')
+                .remove();
+            this.zoomedImage = null;
+        }
+    }
+
+    private exportCard(card: CardData) {
+        if (!this.formattingSettings.cardSettingsCard.enableExport.value) return;
+
+        const cardElement = document.createElement('div');
+        cardElement.className = 'card';
+        cardElement.innerHTML = `
+            <div class="card-top-bar" style="background-color: ${card.topBarColor}"></div>
+            <img class="card-image" src="${card.imageUrl}" alt="${card.title}">
+            <div class="card-content">
+                <h3 class="card-title">${card.title}</h3>
+                <p class="card-summary">${card.summary}</p>
+                <div class="card-subtitle">${card.subtitle.join(' • ')}</div>
+                ${this.formattingSettings.cardSettingsCard.showMetadata.value ? 
+                    `<div class="card-metadata">${Object.entries(card.metadata)
+                        .map(([key, value]) => `<div><strong>${key}:</strong> ${value}</div>`)
+                        .join('')}</div>` : ''}
+                ${this.formattingSettings.cardSettingsCard.showProgress.value ? 
+                    `<div class="card-progress"><div class="progress-bar" style="width: ${card.progress}%"></div></div>` : ''}
+            </div>
+            <img class="card-badge" src="${card.sourceImage}" alt="Badge">
+            <div class="profile-images">
+                ${card.profileImages.map(img => `<img src="${img}" alt="Profile">`).join('')}
+            </div>
+        `;
+
+        // Convertir a imagen
+        html2canvas(cardElement).then(canvas => {
+            const link = document.createElement('a');
+            link.download = `${card.title}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+        });
+    }
+
+    private showTooltip(event: MouseEvent, card: CardData) {
+        if (!this.formattingSettings.cardSettingsCard.enableTooltips.value || !card.tooltip) return;
+
+        const tooltip = d3.select('body')
+            .append('div')
+            .attr('class', 'card-tooltip')
+            .style('position', 'absolute')
+            .style('left', `${event.pageX + 10}px`)
+            .style('top', `${event.pageY + 10}px`)
+            .html(card.tooltip);
+
+        d3.select(event.target as Element)
+            .on('mouseout', () => tooltip.remove());
     }
 
     private renderCards() {
         // Limpiar el contenedor
         this.container.selectAll('*').remove();
 
-        // Crear el grid de tarjetas
-        const cardGrid = this.container
+        // Crear la barra de búsqueda si está habilitada
+        if (this.formattingSettings.cardSettingsCard.enableSearch.value) {
+            const searchContainer = this.container
+                .append('div')
+                .attr('class', 'search-container');
+
+            searchContainer.append('input')
+                .attr('type', 'text')
+                .attr('placeholder', 'Buscar...')
+                .attr('class', 'search-input')
+                .on('input', (event) => {
+                    this.searchTerm = (event.target as HTMLInputElement).value;
+                    this.applyFiltersAndSearch();
+                    this.renderCards();
+                });
+        }
+
+        // Crear los filtros si están habilitados
+        if (this.formattingSettings.cardSettingsCard.enableFilters.value) {
+            const filtersContainer = this.container
+                .append('div')
+                .attr('class', 'filters-container');
+
+            // Obtener todos los metadatos únicos
+            const metadataKeys = new Set<string>();
+            this.cards.forEach(card => {
+                Object.keys(card.metadata).forEach(key => metadataKeys.add(key));
+            });
+
+            // Crear filtros para cada tipo de metadata
+            metadataKeys.forEach(key => {
+                const values = new Set<string>();
+                this.cards.forEach(card => {
+                    const value = card.metadata[key];
+                    if (value) values.add(value.toString());
+                });
+
+                const filterGroup = filtersContainer
+                    .append('div')
+                    .attr('class', 'filter-group');
+
+                filterGroup.append('label')
+                    .text(key);
+
+                const select = filterGroup.append('select')
+                    .attr('multiple', true)
+                    .on('change', (event) => {
+                        const selectedOptions = Array.from((event.target as HTMLSelectElement).selectedOptions)
+                            .map(option => option.value);
+                        this.activeFilters.set(key, selectedOptions);
+                        this.applyFiltersAndSearch();
+                        this.renderCards();
+                    });
+
+                Array.from(values).forEach(value => {
+                    select.append('option')
+                        .attr('value', value)
+                        .text(value);
+                });
+            });
+        }
+
+        // Crear el contenedor de tarjetas
+        const cardContainer = this.container
             .append('div')
-            .attr('class', 'card-grid');
+            .attr('class', this.formattingSettings.cardSettingsCard.viewMode.value === 'grid' ? 'card-grid' : 
+                          this.formattingSettings.cardSettingsCard.viewMode.value === 'list' ? 'card-list' : 'card-gallery');
 
         // Crear las tarjetas
-        const cards = cardGrid
+        const cards = cardContainer
             .selectAll('.card')
-            .data(this.cards)
+            .data(this.filteredCards)
             .enter()
             .append('div')
-            .attr('class', 'card');
+            .attr('class', 'card')
+            .style('height', `${this.formattingSettings.cardSettingsCard.cardHeight.value}px`)
+            .on('click', (event, d) => this.showReader(d))
+            .on('mouseover', (event, d) => this.showTooltip(event, d));
+
+        // Añadir botón de exportación si está habilitado
+        if (this.formattingSettings.cardSettingsCard.enableExport.value) {
+            cards.append('button')
+                .attr('class', 'export-button')
+                .text('Exportar')
+                .on('click', (event, d) => {
+                    event.stopPropagation();
+                    this.exportCard(d);
+                });
+        }
 
         // Añadir la barra superior
         cards.append('div')
@@ -172,18 +376,29 @@ export class Visual implements IVisual {
             .attr('class', 'card-subtitle')
             .html(d => d.subtitle.join(' • '));
 
-        // Añadir los metadatos
-        cardContent.append('div')
-            .attr('class', 'card-metadata')
-            .html(d => {
-                const metadata = d.metadata;
-                if (typeof metadata === 'object') {
-                    return Object.entries(metadata)
-                        .map(([key, value]) => `<div><strong>${key}:</strong> ${value}</div>`)
-                        .join('');
-                }
-                return '';
-            });
+        // Añadir los metadatos si está habilitado
+        if (this.formattingSettings.cardSettingsCard.showMetadata.value) {
+            cardContent.append('div')
+                .attr('class', 'card-metadata')
+                .html(d => {
+                    const metadata = d.metadata;
+                    if (typeof metadata === 'object') {
+                        return Object.entries(metadata)
+                            .map(([key, value]) => `<div><strong>${key}:</strong> ${value}</div>`)
+                            .join('');
+                    }
+                    return '';
+                });
+        }
+
+        // Añadir la barra de progreso si está habilitada
+        if (this.formattingSettings.cardSettingsCard.showProgress.value) {
+            cardContent.append('div')
+                .attr('class', 'card-progress')
+                .append('div')
+                .attr('class', 'progress-bar')
+                .style('width', d => `${d.progress}%`);
+        }
 
         // Añadir la insignia
         cards.append('img')
@@ -205,6 +420,77 @@ export class Visual implements IVisual {
             .style('height', '30px')
             .style('border-radius', '50%')
             .style('margin-right', '5px');
+
+        // Aplicar animaciones si están habilitadas
+        if (this.formattingSettings.animationSettingsCard.enableAnimations.value) {
+            cards.style('opacity', 0)
+                .transition()
+                .duration(this.formattingSettings.animationSettingsCard.animationDuration.value)
+                .style('opacity', 1);
+        }
+    }
+
+    private showReader(card: CardData) {
+        this.selectedCard = card;
+        
+        // Limpiar el contenedor
+        this.container.selectAll('*').remove();
+
+        // Crear el contenedor del lector
+        const readerContainer = this.container
+            .append('div')
+            .attr('class', 'reader-container')
+            .style('background-color', this.formattingSettings.readerSettingsCard.backgroundColor.value.value)
+            .style('color', this.formattingSettings.readerSettingsCard.textColor.value.value)
+            .style('font-size', `${this.formattingSettings.readerSettingsCard.fontSize.value}px`);
+
+        // Añadir botón de regreso si está habilitado
+        if (this.formattingSettings.readerSettingsCard.showBackButton.value) {
+            readerContainer.append('button')
+                .attr('class', 'back-button')
+                .text('← Volver')
+                .on('click', () => {
+                    this.selectedCard = null;
+                    this.renderCards();
+                });
+        }
+
+        // Añadir el contenido del lector
+        readerContainer.append('h1')
+            .attr('class', 'reader-title')
+            .text(card.title);
+
+        if (card.imageUrl) {
+            readerContainer.append('img')
+                .attr('class', 'reader-image')
+                .attr('src', card.imageUrl)
+                .attr('alt', card.title)
+                .on('click', () => this.showZoomedImage(card.imageUrl));
+        }
+
+        readerContainer.append('div')
+            .attr('class', 'reader-content')
+            .html(card.content);
+
+        // Añadir metadatos
+        if (Object.keys(card.metadata).length > 0) {
+            const metadataContainer = readerContainer.append('div')
+                .attr('class', 'reader-metadata');
+
+            Object.entries(card.metadata).forEach(([key, value]) => {
+                metadataContainer.append('div')
+                    .attr('class', 'metadata-item')
+                    .html(`<strong>${key}:</strong> ${value}`);
+            });
+        }
+
+        // Aplicar animaciones si están habilitadas
+        if (this.formattingSettings.animationSettingsCard.enableAnimations.value) {
+            readerContainer.style('opacity', 0)
+                .transition()
+                .duration(this.formattingSettings.animationSettingsCard.animationDuration.value)
+                .style('opacity', 1);
+        }
     }
 
     public getFormattingModel(): powerbi.visuals.FormattingModel {
